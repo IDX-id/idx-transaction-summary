@@ -1,10 +1,10 @@
 # .github/workflows/scheduled-builds.yml
 name: rescan data
 
-on:
-  schedule:
+on: [push]
+ # schedule:
     # Runs "At 18:00 on every day-of-week from Monday through Friday." (see https://crontab.guru)
-    - cron: '0 18 * * 1-5'
+    #- cron: '0 18 * * 1-5'
 
 jobs:
   build:
