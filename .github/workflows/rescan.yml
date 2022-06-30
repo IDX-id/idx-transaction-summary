@@ -1,0 +1,43 @@
+# .github/workflows/scheduled-builds.yml
+name: rescan data 2
+
+on:
+  schedule:
+    # Runs "At 18:00 on every day-of-week from Monday through Friday." (see https://crontab.guru)
+    - cron: '0 11 * * 1-5'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [ '16' ]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Run Update
+        run: |
+          curl -Ss "https://raw.githubusercontent.com/IDX-id/idx-transaction-scrapper/main/package.json" > package.json
+          curl -Ss "https://raw.githubusercontent.com/IDX-id/idx-transaction-scrapper/main/index.js" > index.js
+          npm i
+          curl -Ss "https://raw.githubusercontent.com/IDX-id/idx-transaction-scrapper/main/broker_code.txt" | sed 's/^/node index.js "/g; s/$/" "21 Feb 2022" /g' | sh
+          sudo rm *.json
+          sudo rm *.js
+          sudo rm -rf node_modules/
+      - name: Commit
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update At : `date`"
+      - name: GitHub Push
+        uses: ad-m/github-push-action@master
+        with:
+          force: true
+          directory: "."
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
